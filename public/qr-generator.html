@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indoor Navigation QR Codes</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .qr-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+            padding: 16px;
+        }
+        .qr-code {
+            background-color: white;
+            text-align: center;
+            padding: 24px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .qr-code:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .qr-code img {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 16px;
+            border: 1px solid #f0f0f0;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .qr-code .location-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        .qr-code .url-text {
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+            padding: 8px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #1976d2;
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Indoor Navigation QR Codes</h1>
+    <div class="subtitle">Scan these QR codes to navigate through the building</div>
+    <div class="qr-container" id="qrContainer"></div>
+
+    <script>
+        const locations = [
+            { id: 'room_101', name: 'Room 101 (Lecture Hall)' },
+            { id: 'room_102', name: 'Room 102 (Seminar Room)' },
+            { id: 'lab_a3', name: 'Laboratory A3' },
+            { id: 'lib_main', name: 'Main Library' },
+            { id: 'canteen', name: 'Student Canteen' },
+            { id: 'admin', name: 'Admin Office' }
+        ];
+
+        // Update port number based on the actual running port (3001)
+        const baseUrl = `http://${window.location.hostname}:3001`;
+
+        function generateQR(text) {
+            const qr = qrcode(0, 'L');
+            qr.addData(text);
+            qr.make();
+            return qr.createDataURL(10);
+        }
+
+        const container = document.getElementById('qrContainer');
+        
+        locations.forEach(location => {
+            const url = `${baseUrl}?start=${location.id}`;
+            const qrDiv = document.createElement('div');
+            qrDiv.className = 'qr-code';
+            
+            const img = document.createElement('img');
+            img.src = generateQR(url);
+            img.alt = `QR Code for ${location.name}`;
+            
+            const label = document.createElement('div');
+            label.className = 'location-name';
+            label.textContent = location.name;
+            
+            const urlText = document.createElement('div');
+            urlText.className = 'url-text';
+            urlText.textContent = url;
+            
+            qrDiv.appendChild(img);
+            qrDiv.appendChild(label);
+            qrDiv.appendChild(urlText);
+            container.appendChild(qrDiv);
+        });
+    </script>
+</body>
+</html> 

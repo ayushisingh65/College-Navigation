@@ -4,7 +4,6 @@ import { Location } from '../types';
 import RoomIcon from '@mui/icons-material/Room';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
 import ScienceIcon from '@mui/icons-material/Science';
 import BusinessIcon from '@mui/icons-material/Business';
 import { Box } from '@mui/material';

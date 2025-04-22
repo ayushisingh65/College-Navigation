@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Container, Typography, Box, Button, Paper, Grid, Chip } from '@mui/material';
+import { Container, Typography, Box, Button, Paper, Chip } from '@mui/material';
 import LocationCard from '../components/LocationCard';
 import FloorSelector from '../components/FloorSelector';
 import SearchBar from '../components/SearchBar';
@@ -20,7 +20,6 @@ const Home: React.FC = () => {
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const [arMode, setArMode] = useState(false);
   const [currentFloor, setCurrentFloor] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const start = searchParams.get('start');

@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Typography, Box, CircularProgress, Alert } from '@mui/material';
+import { 
+  Fab, 
+  Typography, 
+  Box, 
+  CircularProgress, 
+  Alert, 
+  Snackbar,
+  Tooltip,
+  Zoom,
+  alpha
+} from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +34,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [showTranscript, setShowTranscript] = useState(false);
   
   const ws = useRef<WebSocket | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
@@ -256,62 +267,97 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
   };
 
   return (
-    <Box sx={{ 
-      p: 2, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      gap: 2,
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      background: 'rgba(255, 255, 255, 0.9)',
-      backdropFilter: 'blur(10px)',
-      borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-      zIndex: 1000
-    }}>
-      {error && (
+    <>
+      <Tooltip 
+        title={isListening ? "Stop Voice Command" : "Start Voice Command"} 
+        placement="left"
+        TransitionComponent={Zoom}
+      >
+        <Fab
+          color={isListening ? "secondary" : "primary"}
+          onClick={toggleListening}
+          disabled={!isConnected || isConnecting}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+            background: isListening 
+              ? 'linear-gradient(45deg, #f50057 30%, #ff4081 90%)'
+              : 'linear-gradient(45deg, #2196f3 30%, #64b5f6 90%)',
+            boxShadow: (theme) => `0 8px 24px ${alpha(
+              isListening ? theme.palette.secondary.main : theme.palette.primary.main, 
+              0.25
+            )}`,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: (theme) => `0 12px 32px ${alpha(
+                isListening ? theme.palette.secondary.main : theme.palette.primary.main,
+                0.35
+              )}`,
+            }
+          }}
+        >
+          {isConnecting ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : isListening ? (
+            <MicOffIcon />
+          ) : (
+            <MicIcon />
+          )}
+        </Fab>
+      </Tooltip>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
         <Alert 
           severity="error" 
           onClose={() => setError(null)}
-          sx={{ width: '100%', maxWidth: 500 }}
+          sx={{ 
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          }}
         >
           {error}
         </Alert>
-      )}
-      
-      <Button
-        variant="contained"
-        color={isListening ? "secondary" : "primary"}
-        onClick={toggleListening}
-        disabled={!isConnected || isConnecting}
-        startIcon={isListening ? <MicOffIcon /> : <MicIcon />}
-        sx={{ minWidth: 200 }}
-      >
-        {isListening ? "Stop" : "Start"} Voice Command
-      </Button>
+      </Snackbar>
 
-      {isConnecting && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CircularProgress size={20} />
-          <Typography>Connecting to voice service...</Typography>
-        </Box>
-      )}
-
-      {isListening && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CircularProgress size={20} color="secondary" />
-          <Typography>Listening...</Typography>
-        </Box>
-      )}
-
-      {isConnected && transcript && (
-        <Typography variant="body1" sx={{ marginTop: 2 }}>
-          <strong>Transcript:</strong> {transcript}
-        </Typography>
-      )}
-    </Box>
+      <Snackbar
+        open={isListening || showTranscript}
+        onClose={() => setShowTranscript(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        message={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {isListening && (
+              <>
+                <CircularProgress size={16} color="inherit" />
+                <Typography>Listening...</Typography>
+              </>
+            )}
+            {transcript && (
+              <Typography>
+                {transcript}
+              </Typography>
+            )}
+          </Box>
+        }
+        sx={{
+          '& .MuiSnackbarContent-root': {
+            borderRadius: 2,
+            background: (theme) => alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: 'blur(10px)',
+            color: 'text.primary',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            minWidth: 'auto',
+            maxWidth: '80vw'
+          }
+        }}
+      />
+    </>
   );
 };
 

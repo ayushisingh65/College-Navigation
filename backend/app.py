@@ -23,9 +23,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://radiant-travesseiro-2ee268.netlify.app",  # Your Netlify app
-        "http://localhost:3000",  # Local development
-        "http://localhost:3001",  # Local development alternate port
+        "https://jovial-madeleine-8f088f.netlify.app",  # Your Netlify app
+        "http://localhost:3000",  # React development server
     ],
     allow_credentials=True,
     allow_methods=["*"],

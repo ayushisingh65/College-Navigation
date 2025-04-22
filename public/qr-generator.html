@@ -123,6 +123,8 @@
     <div class="qr-container" id="qrContainer"></div>
 
     <script>
+        const APP_URL = 'https://jovial-madeleine-8f088f.netlify.app';
+        
         const locations = [
             { id: 'room_101', name: 'Room 101 (Lecture Hall)' },
             { id: 'room_102', name: 'Room 102 (Seminar Room)' },
@@ -149,7 +151,7 @@
         function updateDebugInfo() {
             const debugDiv = document.getElementById('debugInfo');
             const debugInfo = {
-                productionUrl: 'https://radiant-travesseiro-2ee268.netlify.app',
+                productionUrl: APP_URL,
                 currentUrl: window.location.href,
                 timestamp: new Date().toISOString()
             };
@@ -181,7 +183,7 @@
 
         function downloadAllQRCodes() {
             locations.forEach(location => {
-                const url = `https://radiant-travesseiro-2ee268.netlify.app?start=${location.id}`;
+                const url = `${APP_URL}?start=${location.id}`;
                 const qrDataUrl = generateQR(url);
                 downloadQRCode(qrDataUrl, location.name);
             });
@@ -195,7 +197,7 @@
                 
                 locations.forEach(location => {
                     try {
-                        const url = `https://radiant-travesseiro-2ee268.netlify.app?start=${location.id}`;
+                        const url = `${APP_URL}?start=${location.id}`;
                         const qrDiv = document.createElement('div');
                         qrDiv.className = 'qr-code';
                         

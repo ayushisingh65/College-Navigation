@@ -7,12 +7,16 @@ import { Location } from '../types';
 import ExploreIcon from '@mui/icons-material/Explore';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import VoiceAssistant from '../components/VoiceAssistant';
 
 const Home: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [startLocation, setStartLocation] = useState<string>('');
   const [selectedDestination, setSelectedDestination] = useState<Location | null>(null);
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
+  const [arMode, setArMode] = useState(false);
 
   useEffect(() => {
     const start = searchParams.get('start');
@@ -32,11 +36,13 @@ const Home: React.FC = () => {
 
   const handleStartNavigation = () => {
     if (selectedDestination && startLocation) {
-      const navigationPath = `/navigate?start=${encodeURIComponent(startLocation)}&destination=${encodeURIComponent(selectedDestination.id)}`;
+      const navigationPath = `/navigate?start=${encodeURIComponent(startLocation)}&destination=${encodeURIComponent(selectedDestination.id)}&mode=${viewMode}${arMode ? '&ar=true' : ''}`;
       navigate(navigationPath, {
         state: { 
           startLocation,
-          destinationLocation: selectedDestination
+          destinationLocation: selectedDestination,
+          viewMode,
+          arMode
         }
       });
     }
@@ -44,6 +50,51 @@ const Home: React.FC = () => {
 
   const currentLocationObj = locations.find(loc => loc.id === startLocation);
   const currentLocation = currentLocationObj ? currentLocationObj.name : 'Unknown Location';
+
+  const handleVoiceCommand = (action: { 
+    type: string; 
+    params?: { 
+      destination?: string;
+      arMode?: boolean;
+      viewMode?: '2d' | '3d';
+      floor?: number;
+    } 
+  }) => {
+    switch (action.type) {
+      case 'NAVIGATE':
+        const destination = locations.find(loc => 
+          loc.name.toLowerCase().includes(action.params?.destination?.toLowerCase() || '')
+        );
+        if (destination) {
+          handleLocationSelect(destination);
+          if (action.params?.viewMode) {
+            setViewMode(action.params.viewMode);
+          }
+        }
+        break;
+      case 'START_NAVIGATION':
+        if (selectedDestination) {
+          handleStartNavigation();
+        }
+        break;
+      case 'TOGGLE_AR':
+        setArMode(action.params?.arMode || false);
+        if (action.params?.viewMode) {
+          setViewMode(action.params.viewMode);
+        }
+        break;
+      case 'SWITCH_VIEW':
+        if (action.params?.viewMode) {
+          setViewMode(action.params.viewMode);
+        }
+        break;
+      case 'SHOW_HELP':
+        // You can implement help functionality here
+        break;
+      default:
+        console.log('Unknown action:', action.type);
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 } }}>
@@ -147,6 +198,23 @@ const Home: React.FC = () => {
               <Typography variant="h6" color="primary" gutterBottom>
                 To: {selectedDestination.name}
               </Typography>
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+                <Button
+                  variant={viewMode === '2d' ? "contained" : "outlined"}
+                  size="small"
+                  onClick={() => setViewMode('2d')}
+                >
+                  2D View
+                </Button>
+                <Button
+                  variant={viewMode === '3d' ? "contained" : "outlined"}
+                  size="small"
+                  onClick={() => setViewMode('3d')}
+                  startIcon={<ViewInArIcon />}
+                >
+                  3D View
+                </Button>
+              </Box>
             </Paper>
             <Box sx={{ mt: 4 }}>
               <Box sx={{ 
@@ -186,6 +254,7 @@ const Home: React.FC = () => {
           </Box>
         )}
       </Paper>
+      <VoiceAssistant onCommand={handleVoiceCommand} />
     </Container>
   );
 };

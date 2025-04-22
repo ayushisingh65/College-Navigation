@@ -126,12 +126,25 @@
         const APP_URL = 'https://jovial-madeleine-8f088f.netlify.app';
         
         const locations = [
-            { id: 'room_101', name: 'Room 101 (Lecture Hall)' },
-            { id: 'room_102', name: 'Room 102 (Seminar Room)' },
-            { id: 'lab_a3', name: 'Laboratory A3' },
-            { id: 'lib_main', name: 'Main Library' },
-            { id: 'canteen', name: 'Student Canteen' },
-            { id: 'admin', name: 'Admin Office' }
+            // Ground Floor
+            { id: 'admin_office', name: 'Admin Office' },
+            { id: 'principal_office', name: 'Principal Office' },
+            { id: 'library', name: 'Central Library' },
+            
+            // First Floor
+            { id: 'hod_cse', name: 'HOD Cabin - CSE' },
+            { id: 'hod_aiml', name: 'HOD Cabin - CSE-AIML' },
+            { id: 'hod_csbs', name: 'HOD Cabin - CSBS' },
+            { id: 'cc_lab_1', name: 'CC Lab 1' },
+            
+            // Second Floor
+            { id: 'cc_lab_2', name: 'CC Lab 2' },
+            { id: 'ai_lab', name: 'AI Lab' },
+            { id: 'seminar_hall', name: 'Seminar Hall' },
+            
+            // Third Floor
+            { id: 'research_lab', name: 'Research Lab' },
+            { id: 'project_lab', name: 'Project Lab' }
         ];
 
         let debugMode = false;

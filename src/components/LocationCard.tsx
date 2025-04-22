@@ -12,19 +12,20 @@ import { Box } from '@mui/material';
 interface LocationCardProps {
   location: Location;
   onClick: (location: Location) => void;
+  disabled?: boolean;
 }
 
-const LocationCard: React.FC<LocationCardProps> = ({ location, onClick }) => {
+const LocationCard: React.FC<LocationCardProps> = ({ location, onClick, disabled = false }) => {
   const getIcon = () => {
     switch (location.type) {
       case 'room':
+        if (location.id.startsWith('hod_')) return <BusinessIcon sx={{ fontSize: 28 }} />;
         return <MeetingRoomIcon sx={{ fontSize: 28 }} />;
       case 'lab':
         return <ScienceIcon sx={{ fontSize: 28 }} />;
       case 'facility':
-        if (location.id === 'lib_main') return <LocalLibraryIcon sx={{ fontSize: 28 }} />;
-        if (location.id === 'canteen') return <RestaurantIcon sx={{ fontSize: 28 }} />;
-        if (location.id === 'admin') return <BusinessIcon sx={{ fontSize: 28 }} />;
+        if (location.id === 'library') return <LocalLibraryIcon sx={{ fontSize: 28 }} />;
+        if (location.id === 'admin_office' || location.id === 'principal_office') return <BusinessIcon sx={{ fontSize: 28 }} />;
         return <RoomIcon sx={{ fontSize: 28 }} />;
       default:
         return <RoomIcon sx={{ fontSize: 28 }} />;
@@ -34,13 +35,13 @@ const LocationCard: React.FC<LocationCardProps> = ({ location, onClick }) => {
   const getGradient = () => {
     switch (location.type) {
       case 'room':
+        if (location.id.startsWith('hod_')) return 'linear-gradient(135deg, #2196F3 0%, #64B5F6 100%)';
         return 'linear-gradient(135deg, #4CAF50 0%, #81C784 100%)';
       case 'lab':
         return 'linear-gradient(135deg, #FF5722 0%, #FF8A65 100%)';
       case 'facility':
-        if (location.id === 'lib_main') return 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)';
-        if (location.id === 'canteen') return 'linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)';
-        if (location.id === 'admin') return 'linear-gradient(135deg, #2196F3 0%, #64B5F6 100%)';
+        if (location.id === 'library') return 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)';
+        if (location.id === 'admin_office' || location.id === 'principal_office') return 'linear-gradient(135deg, #2196F3 0%, #64B5F6 100%)';
         return 'linear-gradient(135deg, #607D8B 0%, #90A4AE 100%)';
       default:
         return 'linear-gradient(135deg, #607D8B 0%, #90A4AE 100%)';
@@ -54,14 +55,16 @@ const LocationCard: React.FC<LocationCardProps> = ({ location, onClick }) => {
         background: 'rgba(255, 255, 255, 0.9)',
         backdropFilter: 'blur(10px)',
         transition: 'all 0.3s ease-in-out',
+        opacity: disabled ? 0.5 : 1,
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          transform: disabled ? 'none' : 'translateY(-4px)',
+          boxShadow: disabled ? 'none' : '0 8px 24px rgba(0,0,0,0.15)',
         }
       }}
     >
       <CardActionArea 
-        onClick={() => onClick(location)}
+        onClick={() => !disabled && onClick(location)}
+        disabled={disabled}
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
         <CardContent sx={{ flex: 1, p: 0 }}>
@@ -103,7 +106,7 @@ const LocationCard: React.FC<LocationCardProps> = ({ location, onClick }) => {
                   fontWeight: 500
                 }}
               >
-                {location.type}
+                Floor {location.floor === 0 ? 'Ground' : location.floor}
               </Typography>
             </Box>
           )}

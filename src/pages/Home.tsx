@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Container, Typography, Box, Button, Paper } from '@mui/material';
+import { Container, Typography, Box, Button, Paper, Grid, Chip } from '@mui/material';
 import LocationCard from '../components/LocationCard';
+import FloorSelector from '../components/FloorSelector';
+import SearchBar from '../components/SearchBar';
 import { locations } from '../data/locations';
 import { Location } from '../types';
 import ExploreIcon from '@mui/icons-material/Explore';
@@ -17,13 +19,16 @@ const Home: React.FC = () => {
   const [selectedDestination, setSelectedDestination] = useState<Location | null>(null);
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const [arMode, setArMode] = useState(false);
+  const [currentFloor, setCurrentFloor] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const start = searchParams.get('start');
     if (start) {
-      const isValidLocation = locations.some(loc => loc.id === start);
-      if (isValidLocation) {
+      const location = locations.find(loc => loc.id === start);
+      if (location) {
         setStartLocation(start);
+        setCurrentFloor(location.floor);
       }
     }
   }, [searchParams]);
@@ -48,8 +53,23 @@ const Home: React.FC = () => {
     }
   };
 
+  const handleSearchSelect = (location: Location | null) => {
+    if (location && location.id !== startLocation) {
+      setSelectedDestination(location);
+      setCurrentFloor(location.floor);
+    }
+  };
+
   const currentLocationObj = locations.find(loc => loc.id === startLocation);
   const currentLocation = currentLocationObj ? currentLocationObj.name : 'Unknown Location';
+
+  // Filter locations by floor
+  const locationsOnFloor = locations.filter(loc => loc.floor === currentFloor);
+
+  // Important destinations (facilities and HOD cabins)
+  const importantDestinations = locations.filter(
+    loc => loc.type === 'facility' || loc.id.startsWith('hod_')
+  );
 
   const handleVoiceCommand = (action: { 
     type: string; 
@@ -88,6 +108,11 @@ const Home: React.FC = () => {
           setViewMode(action.params.viewMode);
         }
         break;
+      case 'CHANGE_FLOOR':
+        if (action.params?.floor !== undefined) {
+          setCurrentFloor(action.params.floor);
+        }
+        break;
       case 'SHOW_HELP':
         // You can implement help functionality here
         break;
@@ -97,7 +122,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, md: 6 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
       <Paper 
         elevation={0}
         sx={{ 
@@ -126,24 +151,59 @@ const Home: React.FC = () => {
               {currentLocation}
             </Typography>
           </Box>
-          {!currentLocationObj && (
-            <Typography 
-              color="error" 
-              variant="body2"
-              sx={{
-                mt: 2,
-                p: 1,
-                borderRadius: 1,
-                backgroundColor: 'rgba(244, 67, 54, 0.1)'
-              }}
-            >
-              Please scan a valid QR code to start navigation
-            </Typography>
-          )}
         </Box>
+
+        <SearchBar 
+          locations={locations}
+          onLocationSelect={handleSearchSelect}
+        />
+
+        <FloorSelector 
+          currentFloor={currentFloor}
+          onFloorChange={setCurrentFloor}
+        />
 
         {!selectedDestination ? (
           <>
+            <Box sx={{ mb: 4 }}>
+              <Typography 
+                variant="h5" 
+                gutterBottom 
+                sx={{ 
+                  textAlign: 'center',
+                  color: 'text.primary',
+                  mb: 3
+                }}
+              >
+                Important Destinations
+              </Typography>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: 1,
+                  justifyContent: 'center'
+                }}
+              >
+                {importantDestinations.map((location) => (
+                  <Chip
+                    key={location.id}
+                    label={location.name}
+                    onClick={() => handleLocationSelect(location)}
+                    sx={{
+                      borderRadius: 3,
+                      py: 2.5,
+                      backgroundColor: location.floor === currentFloor ? 'primary.main' : 'default',
+                      color: location.floor === currentFloor ? 'white' : 'inherit',
+                      '&:hover': {
+                        backgroundColor: location.floor === currentFloor ? 'primary.dark' : 'default',
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+
             <Typography 
               variant="h5" 
               gutterBottom 
@@ -153,28 +213,20 @@ const Home: React.FC = () => {
                 color: 'text.primary'
               }}
             >
-              Select Your Destination
+              Locations on Floor {currentFloor === 0 ? 'Ground' : `${currentFloor}${currentFloor === 1 ? 'st' : currentFloor === 2 ? 'nd' : 'rd'}`}
             </Typography>
             <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 3,
-              justifyContent: 'center'
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+              gap: 3
             }}>
-              {locations.map((location) => (
-                <Box 
+              {locationsOnFloor.map((location) => (
+                <LocationCard
                   key={location.id}
-                  sx={{ 
-                    width: { xs: '100%', sm: 'calc(50% - 12px)' },
-                    opacity: location.id === startLocation ? 0.5 : 1,
-                    pointerEvents: location.id === startLocation ? 'none' : 'auto',
-                  }}
-                >
-                  <LocationCard
-                    location={location}
-                    onClick={handleLocationSelect}
-                  />
-                </Box>
+                  location={location}
+                  onClick={handleLocationSelect}
+                  disabled={location.id === startLocation}
+                />
               ))}
             </Box>
           </>
@@ -193,10 +245,10 @@ const Home: React.FC = () => {
               }}
             >
               <Typography variant="h6" color="primary" gutterBottom>
-                From: {currentLocation}
+                From: {currentLocation} (Floor {currentLocationObj?.floor === 0 ? 'Ground' : currentLocationObj?.floor})
               </Typography>
               <Typography variant="h6" color="primary" gutterBottom>
-                To: {selectedDestination.name}
+                To: {selectedDestination.name} (Floor {selectedDestination.floor === 0 ? 'Ground' : selectedDestination.floor})
               </Typography>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
                 <Button
@@ -216,40 +268,39 @@ const Home: React.FC = () => {
                 </Button>
               </Box>
             </Paper>
-            <Box sx={{ mt: 4 }}>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: 'center',
-                gap: 2,
-                justifyContent: 'center'
-              }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={handleStartNavigation}
-                  disabled={!currentLocationObj}
-                  startIcon={<NavigationIcon />}
-                  fullWidth={false}
-                  sx={{ 
-                    minWidth: { xs: '100%', sm: 'auto' }
-                  }}
-                >
-                  Start Navigation
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={() => setSelectedDestination(null)}
-                  startIcon={<ArrowBackIcon />}
-                  fullWidth={false}
-                  sx={{ 
-                    minWidth: { xs: '100%', sm: 'auto' }
-                  }}
-                >
-                  Change Destination
-                </Button>
-              </Box>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center',
+              gap: 2,
+              justifyContent: 'center'
+            }}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={handleStartNavigation}
+                disabled={!currentLocationObj}
+                startIcon={<NavigationIcon />}
+                fullWidth={false}
+                sx={{ 
+                  minWidth: { xs: '100%', sm: 'auto' }
+                }}
+              >
+                Start Navigation
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setSelectedDestination(null)}
+                startIcon={<ArrowBackIcon />}
+                fullWidth={false}
+                sx={{ 
+                  minWidth: { xs: '100%', sm: 'auto' }
+                }}
+              >
+                Change Destination
+              </Button>
             </Box>
           </Box>
         )}

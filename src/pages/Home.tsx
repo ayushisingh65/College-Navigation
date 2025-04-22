@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Container, Typography, Box, Button, Paper, Chip } from '@mui/material';
+import { Container, Typography, Box, Button, Paper, Chip, alpha } from '@mui/material';
 import LocationCard from '../components/LocationCard';
 import FloorSelector from '../components/FloorSelector';
 import SearchBar from '../components/SearchBar';
@@ -121,191 +121,280 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: { xs: 2, md: 4 },
-          background: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: 4,
-        }}
-      >
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <ExploreIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h4" component="h1" gutterBottom>
-            Indoor Navigation
-          </Typography>
-          <Box sx={{ 
-            display: 'inline-flex', 
-            alignItems: 'center',
-            background: 'rgba(33, 150, 243, 0.1)',
-            px: 3,
-            py: 1.5,
-            borderRadius: 3,
-            mb: 2
-          }}>
-            <NavigationIcon sx={{ color: 'primary.main', mr: 1 }} />
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 500 }}>
-              {currentLocation}
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f6f8fc 0%, #e3f2fd 100%)',
+        py: { xs: 4, md: 6 }
+      }}
+    >
+      <Container maxWidth="lg">
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: { xs: 2, md: 4 },
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 4,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+            transition: 'transform 0.3s ease-in-out',
+            '&:hover': {
+              transform: 'translateY(-4px)'
+            }
+          }}
+        >
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                p: 2,
+                borderRadius: '50%',
+                background: (theme) => alpha(theme.palette.primary.main, 0.1),
+                mb: 2
+              }}
+            >
+              <ExploreIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+            </Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #1976d2 0%, #64b5f6 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                mb: 3
+              }}
+            >
+              Indoor Navigation
             </Typography>
+            <Box sx={{ 
+              display: 'inline-flex', 
+              alignItems: 'center',
+              background: (theme) => alpha(theme.palette.primary.main, 0.08),
+              px: 3,
+              py: 2,
+              borderRadius: 3,
+              mb: 3,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+            }}>
+              <NavigationIcon sx={{ color: 'primary.main', mr: 1 }} />
+              <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                {currentLocation}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
 
-        <SearchBar 
-          locations={locations}
-          onLocationSelect={handleSearchSelect}
-        />
+          <Box sx={{ mb: 4 }}>
+            <SearchBar 
+              locations={locations}
+              onLocationSelect={handleSearchSelect}
+            />
+          </Box>
 
-        <FloorSelector 
-          currentFloor={currentFloor}
-          onFloorChange={setCurrentFloor}
-        />
+          <Box sx={{ mb: 4 }}>
+            <FloorSelector 
+              currentFloor={currentFloor}
+              onFloorChange={setCurrentFloor}
+            />
+          </Box>
 
-        {!selectedDestination ? (
-          <>
-            <Box sx={{ mb: 4 }}>
+          {!selectedDestination ? (
+            <>
+              <Box sx={{ mb: 5 }}>
+                <Typography 
+                  variant="h5" 
+                  gutterBottom 
+                  sx={{ 
+                    textAlign: 'center',
+                    color: 'text.primary',
+                    fontWeight: 600,
+                    mb: 3
+                  }}
+                >
+                  Important Destinations
+                </Typography>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 1.5,
+                    justifyContent: 'center'
+                  }}
+                >
+                  {importantDestinations.map((location) => (
+                    <Chip
+                      key={location.id}
+                      label={location.name}
+                      onClick={() => handleLocationSelect(location)}
+                      sx={{
+                        borderRadius: 3,
+                        py: 2.5,
+                        px: 1,
+                        backgroundColor: location.floor === currentFloor ? 'primary.main' : 'background.paper',
+                        color: location.floor === currentFloor ? 'white' : 'text.primary',
+                        border: (theme) => `1px solid ${location.floor === currentFloor ? 'transparent' : theme.palette.divider}`,
+                        boxShadow: location.floor === currentFloor ? '0 4px 12px rgba(25, 118, 210, 0.2)' : 'none',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          backgroundColor: location.floor === currentFloor ? 'primary.dark' : alpha('#1976d2', 0.08),
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+
               <Typography 
                 variant="h5" 
                 gutterBottom 
                 sx={{ 
+                  mb: 3,
                   textAlign: 'center',
                   color: 'text.primary',
-                  mb: 3
+                  fontWeight: 600
                 }}
               >
-                Important Destinations
+                Locations on Floor {currentFloor === 0 ? 'Ground' : `${currentFloor}${currentFloor === 1 ? 'st' : currentFloor === 2 ? 'nd' : 'rd'}`}
               </Typography>
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: 1,
-                  justifyContent: 'center'
-                }}
-              >
-                {importantDestinations.map((location) => (
-                  <Chip
+              <Box sx={{ 
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                gap: 3
+              }}>
+                {locationsOnFloor.map((location) => (
+                  <LocationCard
                     key={location.id}
-                    label={location.name}
-                    onClick={() => handleLocationSelect(location)}
-                    sx={{
-                      borderRadius: 3,
-                      py: 2.5,
-                      backgroundColor: location.floor === currentFloor ? 'primary.main' : 'default',
-                      color: location.floor === currentFloor ? 'white' : 'inherit',
-                      '&:hover': {
-                        backgroundColor: location.floor === currentFloor ? 'primary.dark' : 'default',
-                      }
-                    }}
+                    location={location}
+                    onClick={handleLocationSelect}
+                    disabled={location.id === startLocation}
                   />
                 ))}
               </Box>
-            </Box>
-
-            <Typography 
-              variant="h5" 
-              gutterBottom 
-              sx={{ 
-                mb: 3,
-                textAlign: 'center',
-                color: 'text.primary'
-              }}
-            >
-              Locations on Floor {currentFloor === 0 ? 'Ground' : `${currentFloor}${currentFloor === 1 ? 'st' : currentFloor === 2 ? 'nd' : 'rd'}`}
-            </Typography>
-            <Box sx={{ 
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-              gap: 3
-            }}>
-              {locationsOnFloor.map((location) => (
-                <LocationCard
-                  key={location.id}
-                  location={location}
-                  onClick={handleLocationSelect}
-                  disabled={location.id === startLocation}
-                />
-              ))}
-            </Box>
-          </>
-        ) : (
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h5" gutterBottom sx={{ color: 'text.primary' }}>
-              Confirm Your Destination
-            </Typography>
-            <Paper 
-              elevation={0}
-              sx={{ 
-                p: 3, 
-                my: 3, 
-                borderRadius: 3,
-                background: 'rgba(33, 150, 243, 0.1)',
-              }}
-            >
-              <Typography variant="h6" color="primary" gutterBottom>
-                From: {currentLocation} (Floor {currentLocationObj?.floor === 0 ? 'Ground' : currentLocationObj?.floor})
+            </>
+          ) : (
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography 
+                variant="h5" 
+                gutterBottom 
+                sx={{ 
+                  color: 'text.primary',
+                  fontWeight: 600,
+                  mb: 3
+                }}
+              >
+                Confirm Your Destination
               </Typography>
-              <Typography variant="h6" color="primary" gutterBottom>
-                To: {selectedDestination.name} (Floor {selectedDestination.floor === 0 ? 'Ground' : selectedDestination.floor})
-              </Typography>
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  my: 3, 
+                  borderRadius: 3,
+                  background: (theme) => alpha(theme.palette.primary.main, 0.04),
+                  border: '1px solid',
+                  borderColor: (theme) => alpha(theme.palette.primary.main, 0.1)
+                }}
+              >
+                <Typography variant="h6" color="primary" gutterBottom sx={{ fontWeight: 600 }}>
+                  From: {currentLocation} (Floor {currentLocationObj?.floor === 0 ? 'Ground' : currentLocationObj?.floor})
+                </Typography>
+                <Typography variant="h6" color="primary" gutterBottom sx={{ fontWeight: 600 }}>
+                  To: {selectedDestination.name} (Floor {selectedDestination.floor === 0 ? 'Ground' : selectedDestination.floor})
+                </Typography>
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
+                  <Button
+                    variant={viewMode === '2d' ? "contained" : "outlined"}
+                    size="large"
+                    onClick={() => setViewMode('2d')}
+                    sx={{
+                      borderRadius: 2,
+                      px: 3,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    2D View
+                  </Button>
+                  <Button
+                    variant={viewMode === '3d' ? "contained" : "outlined"}
+                    size="large"
+                    onClick={() => setViewMode('3d')}
+                    startIcon={<ViewInArIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      px: 3,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    3D View
+                  </Button>
+                </Box>
+              </Paper>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: 'center',
+                gap: 2,
+                justifyContent: 'center',
+                mt: 4
+              }}>
                 <Button
-                  variant={viewMode === '2d' ? "contained" : "outlined"}
-                  size="small"
-                  onClick={() => setViewMode('2d')}
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={handleStartNavigation}
+                  disabled={!currentLocationObj}
+                  startIcon={<NavigationIcon />}
+                  sx={{ 
+                    minWidth: { xs: '100%', sm: 'auto' },
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 16px rgba(25, 118, 210, 0.3)'
+                    }
+                  }}
                 >
-                  2D View
+                  Start Navigation
                 </Button>
                 <Button
-                  variant={viewMode === '3d' ? "contained" : "outlined"}
-                  size="small"
-                  onClick={() => setViewMode('3d')}
-                  startIcon={<ViewInArIcon />}
+                  variant="outlined"
+                  onClick={() => setSelectedDestination(null)}
+                  startIcon={<ArrowBackIcon />}
+                  size="large"
+                  sx={{ 
+                    minWidth: { xs: '100%', sm: 'auto' },
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 2,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
                 >
-                  3D View
+                  Change Destination
                 </Button>
               </Box>
-            </Paper>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: 'center',
-              gap: 2,
-              justifyContent: 'center'
-            }}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                onClick={handleStartNavigation}
-                disabled={!currentLocationObj}
-                startIcon={<NavigationIcon />}
-                fullWidth={false}
-                sx={{ 
-                  minWidth: { xs: '100%', sm: 'auto' }
-                }}
-              >
-                Start Navigation
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setSelectedDestination(null)}
-                startIcon={<ArrowBackIcon />}
-                fullWidth={false}
-                sx={{ 
-                  minWidth: { xs: '100%', sm: 'auto' }
-                }}
-              >
-                Change Destination
-              </Button>
             </Box>
-          </Box>
-        )}
-      </Paper>
+          )}
+        </Paper>
+      </Container>
       <VoiceAssistant onCommand={handleVoiceCommand} />
-    </Container>
+    </Box>
   );
 };
 

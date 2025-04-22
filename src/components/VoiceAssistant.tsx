@@ -46,6 +46,68 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
     }
   }, [reconnectAttempts]);
 
+  const handleIntent = useCallback((response: any) => {
+    if (!response || !response.action) {
+      console.log('Invalid intent data received:', response);
+      return;
+    }
+
+    const { action } = response;
+    
+    switch (action.type) {
+      case 'NAVIGATE':
+        if (action.params?.destination) {
+          onCommand({
+            ...action,
+            params: {
+              ...action.params,
+              viewMode: '2d'
+            }
+          });
+        }
+        break;
+      case 'START_NAVIGATION':
+        onCommand(action);
+        break;
+      case 'CANCEL_NAVIGATION':
+        onCommand({ type: 'CANCEL_NAVIGATION' });
+        navigate('/');
+        break;
+      case 'SHOW_HELP':
+        onCommand(action);
+        break;
+      case 'TOGGLE_AR':
+        onCommand({
+          type: 'TOGGLE_AR',
+          params: {
+            arMode: true,
+            viewMode: '3d'
+          }
+        });
+        break;
+      case 'SWITCH_VIEW':
+        onCommand({
+          type: 'SWITCH_VIEW',
+          params: {
+            viewMode: action.params?.viewMode || '2d'
+          }
+        });
+        break;
+      case 'CHANGE_FLOOR':
+        if (action.params?.floor !== undefined) {
+          onCommand({
+            type: 'CHANGE_FLOOR',
+            params: {
+              floor: action.params.floor
+            }
+          });
+        }
+        break;
+      default:
+        console.log('Unknown action type:', action.type);
+    }
+  }, [navigate, onCommand]);
+
   const connectWebSocket = useCallback(() => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       console.log('WebSocket already connected');
@@ -109,69 +171,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
       setIsConnecting(false);
       handleReconnect();
     }
-  }, [handleReconnect]);
-
-  const handleIntent = useCallback((response: any) => {
-    if (!response || !response.action) {
-      console.log('Invalid intent data received:', response);
-      return;
-    }
-
-    const { action } = response;
-    
-    switch (action.type) {
-      case 'NAVIGATE':
-        if (action.params?.destination) {
-          onCommand({
-            ...action,
-            params: {
-              ...action.params,
-              viewMode: '2d'
-            }
-          });
-        }
-        break;
-      case 'START_NAVIGATION':
-        onCommand(action);
-        break;
-      case 'CANCEL_NAVIGATION':
-        onCommand({ type: 'CANCEL_NAVIGATION' });
-        navigate('/');
-        break;
-      case 'SHOW_HELP':
-        onCommand(action);
-        break;
-      case 'TOGGLE_AR':
-        onCommand({
-          type: 'TOGGLE_AR',
-          params: {
-            arMode: true,
-            viewMode: '3d'
-          }
-        });
-        break;
-      case 'SWITCH_VIEW':
-        onCommand({
-          type: 'SWITCH_VIEW',
-          params: {
-            viewMode: action.params?.viewMode || '2d'
-          }
-        });
-        break;
-      case 'CHANGE_FLOOR':
-        if (action.params?.floor !== undefined) {
-          onCommand({
-            type: 'CHANGE_FLOOR',
-            params: {
-              floor: action.params.floor
-            }
-          });
-        }
-        break;
-      default:
-        console.log('Unknown action type:', action.type);
-    }
-  }, [navigate, onCommand]);
+  }, [handleReconnect, handleIntent]);
 
   useEffect(() => {
     connectWebSocket();

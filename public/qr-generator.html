@@ -67,11 +67,59 @@
             color: #666;
             margin-bottom: 32px;
         }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls select {
+            padding: 8px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .controls button {
+            padding: 8px 16px;
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background-color: #1565c0;
+        }
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1>Indoor Navigation QR Codes</h1>
     <div class="subtitle">Scan these QR codes to navigate through the building</div>
+    
+    <div class="controls">
+        <button onclick="downloadAllQRCodes()">Download All QR Codes</button>
+        <button onclick="toggleDebugInfo()">Toggle Debug Info</button>
+    </div>
+
+    <div id="errorMessage" class="error-message"></div>
+    <div id="debugInfo" class="debug-info"></div>
+    
     <div class="qr-container" id="qrContainer"></div>
 
     <script>
@@ -84,8 +132,38 @@
             { id: 'admin', name: 'Admin Office' }
         ];
 
-        // Update port number based on the actual running port (3001)
-        const baseUrl = `https://radiant-travesseiro-2ee268.netlify.app/`;
+        let debugMode = false;
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            console.error(message);
+        }
+
+        function clearError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.style.display = 'none';
+        }
+
+        function updateDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            const debugInfo = {
+                productionUrl: 'https://radiant-travesseiro-2ee268.netlify.app',
+                currentUrl: window.location.href,
+                timestamp: new Date().toISOString()
+            };
+            debugDiv.textContent = JSON.stringify(debugInfo, null, 2);
+        }
+
+        function toggleDebugInfo() {
+            debugMode = !debugMode;
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.style.display = debugMode ? 'block' : 'none';
+            if (debugMode) {
+                updateDebugInfo();
+            }
+        }
 
         function generateQR(text) {
             const qr = qrcode(0, 'L');
@@ -94,29 +172,81 @@
             return qr.createDataURL(10);
         }
 
-        const container = document.getElementById('qrContainer');
-        
-        locations.forEach(location => {
-            const url = `${baseUrl}?start=${location.id}`;
-            const qrDiv = document.createElement('div');
-            qrDiv.className = 'qr-code';
-            
-            const img = document.createElement('img');
-            img.src = generateQR(url);
-            img.alt = `QR Code for ${location.name}`;
-            
-            const label = document.createElement('div');
-            label.className = 'location-name';
-            label.textContent = location.name;
-            
-            const urlText = document.createElement('div');
-            urlText.className = 'url-text';
-            urlText.textContent = url;
-            
-            qrDiv.appendChild(img);
-            qrDiv.appendChild(label);
-            qrDiv.appendChild(urlText);
-            container.appendChild(qrDiv);
+        function downloadQRCode(dataUrl, locationName) {
+            const link = document.createElement('a');
+            link.download = `qr-code-${locationName.toLowerCase().replace(/\s+/g, '-')}.png`;
+            link.href = dataUrl;
+            link.click();
+        }
+
+        function downloadAllQRCodes() {
+            locations.forEach(location => {
+                const url = `https://radiant-travesseiro-2ee268.netlify.app?start=${location.id}`;
+                const qrDataUrl = generateQR(url);
+                downloadQRCode(qrDataUrl, location.name);
+            });
+        }
+
+        function generateQRCodes() {
+            try {
+                clearError();
+                const container = document.getElementById('qrContainer');
+                container.innerHTML = ''; // Clear existing QR codes
+                
+                locations.forEach(location => {
+                    try {
+                        const url = `https://radiant-travesseiro-2ee268.netlify.app?start=${location.id}`;
+                        const qrDiv = document.createElement('div');
+                        qrDiv.className = 'qr-code';
+                        
+                        const img = document.createElement('img');
+                        img.src = generateQR(url);
+                        img.alt = `QR Code for ${location.name}`;
+                        
+                        const label = document.createElement('div');
+                        label.className = 'location-name';
+                        label.textContent = location.name;
+                        
+                        const urlText = document.createElement('div');
+                        urlText.className = 'url-text';
+                        urlText.textContent = url;
+
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.textContent = 'Download QR Code';
+                        downloadBtn.onclick = () => downloadQRCode(img.src, location.name);
+                        downloadBtn.style.marginTop = '10px';
+                        downloadBtn.style.padding = '8px 16px';
+                        downloadBtn.style.backgroundColor = '#1976d2';
+                        downloadBtn.style.color = 'white';
+                        downloadBtn.style.border = 'none';
+                        downloadBtn.style.borderRadius = '4px';
+                        downloadBtn.style.cursor = 'pointer';
+                        
+                        qrDiv.appendChild(img);
+                        qrDiv.appendChild(label);
+                        qrDiv.appendChild(urlText);
+                        qrDiv.appendChild(downloadBtn);
+                        container.appendChild(qrDiv);
+                    } catch (error) {
+                        showError(`Error generating QR code for ${location.name}: ${error.message}`);
+                    }
+                });
+
+                if (debugMode) {
+                    updateDebugInfo();
+                }
+            } catch (error) {
+                showError(`Error generating QR codes: ${error.message}`);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                generateQRCodes();
+            } catch (error) {
+                showError(`Error initializing QR generator: ${error.message}`);
+            }
         });
     </script>
 </body>

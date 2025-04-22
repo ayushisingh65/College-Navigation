@@ -19,10 +19,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Add CORS middleware
+# Add CORS middleware with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend URL
+    allow_origins=[
+        "https://radiant-travesseiro-2ee268.netlify.app",  # Your Netlify app
+        "http://localhost:3000",  # Local development
+        "http://localhost:3001",  # Local development alternate port
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

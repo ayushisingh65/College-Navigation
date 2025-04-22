@@ -1,27 +1,36 @@
+const isProd = process.env.NODE_ENV === 'production';
+
 // Get the server IP from environment variable or use the local network IP
 const getServerUrl = () => {
-    // In development, you can set this in your .env file
-    if (process.env.REACT_APP_SERVER_URL) {
+    if (isProd) {
         return process.env.REACT_APP_SERVER_URL;
     }
     
-    // For local development network access
-    const hostname = window.location.hostname;
-    return `http://${hostname}:8000`;
+    // For local development
+    return `http://${window.location.hostname}:8000`;
 };
 
 const getWebSocketUrl = () => {
-    // In development, you can set this in your .env file
-    if (process.env.REACT_APP_WS_URL) {
+    if (isProd) {
         return process.env.REACT_APP_WS_URL;
     }
     
-    // For local development network access
-    const hostname = window.location.hostname;
-    return `ws://${hostname}:8000`;
+    // For local development
+    return `ws://${window.location.hostname}:8000`;
+};
+
+const getFrontendUrl = () => {
+    if (isProd) {
+        return process.env.REACT_APP_FRONTEND_URL;
+    }
+    
+    // For local development
+    return `http://${window.location.hostname}:3000`;
 };
 
 export const config = {
     serverUrl: getServerUrl(),
     wsUrl: getWebSocketUrl(),
+    frontendUrl: getFrontendUrl(),
+    isProd,
 }; 

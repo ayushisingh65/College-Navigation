@@ -33,18 +33,8 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
   const RECONNECT_DELAY = 2000;
   const navigate = useNavigate();
 
-  const handleReconnect = useCallback(() => {
-    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-      setReconnectAttempts(prev => prev + 1);
-      reconnectTimeout.current = setTimeout(() => {
-        console.log(`Attempting to reconnect... (${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
-        connectWebSocket();
-      }, RECONNECT_DELAY);
-    } else {
-      setError('Failed to connect after multiple attempts. Please try again later.');
-      setIsConnecting(false);
-    }
-  }, [reconnectAttempts]);
+  // Ref to store handleReconnect function
+  const handleReconnectRef = useRef<() => void>(() => {});
 
   const handleIntent = useCallback((response: any) => {
     if (!response || !response.action) {
@@ -118,7 +108,6 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
     setError(null);
 
     try {
-      // Close existing connection if any
       if (ws.current) {
         ws.current.close();
       }
@@ -138,7 +127,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
         setIsConnected(false);
         setIsListening(false);
         if (event.code !== 1000) { // 1000 is normal closure
-          handleReconnect();
+          handleReconnectRef.current();
         }
       };
 
@@ -169,9 +158,27 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
       console.error('Error creating WebSocket:', e);
       setError(`Failed to establish connection to ${config.wsUrl}. Please check if the server is running.`);
       setIsConnecting(false);
-      handleReconnect();
+      handleReconnectRef.current();
     }
-  }, [handleReconnect, handleIntent]);
+  }, [handleIntent]);
+
+  const handleReconnect = useCallback(() => {
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      setReconnectAttempts(prev => prev + 1);
+      reconnectTimeout.current = setTimeout(() => {
+        console.log(`Attempting to reconnect... (${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+        connectWebSocket();
+      }, RECONNECT_DELAY);
+    } else {
+      setError('Failed to connect after multiple attempts. Please try again later.');
+      setIsConnecting(false);
+    }
+  }, [reconnectAttempts, connectWebSocket]);
+
+  // Update handleReconnect ref
+  useEffect(() => {
+    handleReconnectRef.current = handleReconnect;
+  }, [handleReconnect]);
 
   useEffect(() => {
     connectWebSocket();
@@ -217,7 +224,7 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
           } else {
             setError('Connection lost. Please try again.');
             setIsListening(false);
-            connectWebSocket(); // Try to reconnect
+            connectWebSocket();
           }
         };
       };
@@ -299,13 +306,13 @@ const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onCommand }) => {
         </Box>
       )}
 
-      {transcript && (
-        <Typography variant="body1" sx={{ mt: 1 }}>
-          You said: {transcript}
+      {isConnected && transcript && (
+        <Typography variant="body1" sx={{ marginTop: 2 }}>
+          <strong>Transcript:</strong> {transcript}
         </Typography>
       )}
     </Box>
   );
 };
 
-export default VoiceAssistant; 
+export default VoiceAssistant;

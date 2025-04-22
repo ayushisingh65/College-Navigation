@@ -75,7 +75,7 @@ class IntentResponse(BaseModel):
 def classify_intent(text: str) -> dict:
     # Create hypothesis pairs for zero-shot classification
     candidate_labels = INTENTS
-    result = intent_classifier(text, candidate_labels, multi_label=False)
+    result = intent_classifier(text, candidate_labels)
     
     # Get the highest scoring intent
     intent = result['labels'][0]
@@ -201,16 +201,39 @@ async def voice_websocket(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     import socket
+    import sys
+    from contextlib import closing
+    
+    def find_free_port():
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+            s.bind(('', 0))
+            s.listen(1)
+            port = s.getsockname()[1]
+            return port
     
     # Get the local IP address
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
-    print(f"Server running at: http://{local_ip}:8000")
     
-    uvicorn.run(
-        app, 
-        host="0.0.0.0",  # Bind to all network interfaces
-        port=8000, 
-        ws_ping_interval=20.0, 
-        ws_ping_timeout=20.0
-    ) 
+    # Try port 8000 first, if not available, find a free port
+    try:
+        port = 8000
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('', port))
+    except OSError:
+        port = find_free_port()
+        print(f"Port 8000 is in use, using port {port} instead")
+    
+    print(f"Server running at: http://{local_ip}:{port}")
+    
+    try:
+        uvicorn.run(
+            app, 
+            host="0.0.0.0",
+            port=port,
+            ws_ping_interval=20.0,
+            ws_ping_timeout=20.0
+        )
+    except Exception as e:
+        print(f"Error starting server: {e}")
+        sys.exit(1) 
